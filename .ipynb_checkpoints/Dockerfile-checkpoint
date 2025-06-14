@@ -1,0 +1,30 @@
+# Use an official Python slim image for reduced size (base OS image)
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \  # Ensures Python output is sent straight to terminal
+    PIP_NO_CACHE_DIR=1    # Prevents pip from caching downloads (reduces image size)
+
+# Install system dependencies (required for matplotlib's plotting functionality)
+RUN apt-get update && \   # Updates package list
+    apt-get install -y --no-install-recommends \  # Installs only essential packages
+    libfreetype6-dev \    # Required for matplotlib font rendering
+    pkg-config && \       # Helps find installed libraries
+    rm -rf /var/lib/apt/lists/*  # Cleans up apt cache to reduce image size
+
+# Set working directory (all subsequent commands run in /app)
+WORKDIR /app
+
+# Install Python packages
+RUN pip install --upgrade pip && \  # Updates pip to latest version
+    pip install numpy pandas matplotlib seaborn  # Installs data science stack
+
+# Verify installations by importing all libraries
+RUN python -c "import numpy, pandas, matplotlib, seaborn; print('Libraries imported successfully')"
+
+# Install Jupyter Notebook (for interactive development)
+RUN pip install jupyter
+
+# Default command when container starts (only the last CMD is effective)
+# Note: The previous CMD ["python"] is overwritten by this one
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--allow-root"]
